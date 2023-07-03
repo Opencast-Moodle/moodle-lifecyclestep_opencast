@@ -15,21 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin tool "Course Life Cycle" - Subplugin "Opencast step" - Version file
+ * Cache Definition for Opencast Step
  *
  * @package    lifecyclestep_opencast
- * @copyright  2022 Alexander Bias, lern.link GmbH <alexander.bias@lernlink.de>
+ * @copyright  2023 Farbod Zamani Boroujeni, ELAN e.V.
+ * @author     Farbod Zamani Boroujeni <zamani@elan-ev.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'lifecyclestep_opencast';
-$plugin->version = 2023070300;
-$plugin->release = 'v4.1-r1';
-$plugin->requires = 2020061500;
-$plugin->supported = [39, 39];
-$plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = array('tool_lifecycle' => 2022033100,
-        'tool_opencast' => 2022032000,
-        'block_opencast' => 2022032000);
+$definitions = array(
+        'ocworkflows' => array(
+                'mode' => cache_store::MODE_APPLICATION
+        ),
+        'seriesvideos' => array(
+                'mode' => cache_store::MODE_APPLICATION
+        ),
+        'sharedseries' => array(
+                'mode' => cache_store::MODE_APPLICATION
+        ),
+        'deletedvideos' => array(
+                'mode' => cache_store::MODE_APPLICATION
+        ),
+);

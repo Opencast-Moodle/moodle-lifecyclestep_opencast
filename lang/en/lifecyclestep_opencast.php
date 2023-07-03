@@ -28,13 +28,26 @@ $string['pluginname'] = 'Opencast step';
 $string['mform_generalsettingsheading'] = 'General settings';
 $string['mform_ocinstanceheading'] = 'Opencast instance: {$a->name}';
 $string['mform_octrace'] = 'Enable trace';
-$string['mform_octrace_help'] = 'TODO';
+$string['mform_octrace_help'] = 'When enabled, more detailed logs will be generated.';
+$string['mform_ocnotifyadmin'] = 'Enable notify admin';
+$string['mform_ocnotifyadmin_help'] = 'When enabled, admins will be notified in case something does not work as expected i.e failures and errors.';
 $string['mform_ocworkflow'] = 'Opencast workflow';
-$string['mform_ocworkflow_help'] = 'TODO';
+$string['mform_ocworkflow_help'] = 'The opencast workflow to perform on the event of a series eligibale for the step.';
 $string['setting_ratelimiter'] = 'Opencast rate limiter';
-$string['setting_ratelimiter_desc'] = 'TODO';
+$string['setting_ratelimiter_desc'] = 'This option makes the step to only be performed once for an opencast event. Disabling this option processes all events of a series in one go.';
 $string['setting_workflowtag'] = 'Opencast workflow tag';
-$string['setting_workflowtag_desc'] = 'TODO';
+$string['setting_workflowtag_desc'] = 'It is meant to be used to extract all opencast workflows with the same tag, which at the end provides a list of workflows to select from in a step.';
 
 
 $string['privacy:metadata'] = 'The "Opencast step" subplugin of the admin tool "Course Life Cycle" does not store any personal data.';
+
+// Notifications.
+$string['coursefullnameunknown'] = 'Unkown coursename';
+$string['errorfailedworkflow_subj'] = 'Life Cycle Opencast step workflow failed';
+$string['errorfailedworkflow_body'] = 'The workflow ({$a->ocworkflow}) of opencast instance (ID: {$a->ocinstanceid}) failed to start on event "{$a->videotitle}" (ID: {$a->videoidentifier}) in {$a->coursefullname} (ID: {$a->courseid})';
+$string['errorexception_subj'] = 'Life Cycle Opencast step Fatal error';
+$string['errorexception_body'] = 'There was a fatal error during the opencast step process for {$a->coursefullname} (ID: {$a->courseid}) with workflow ($a->ocworkflow) of opencast instance (ID: {$a->ocinstanceid}).';
+$string['errorworkflownotexists_subj'] = 'Life Cycle Opencast step workflow was not found';
+$string['errorworkflownotexists_body'] = 'The workflow ({$a->ocworkflow}) was not found in opencast instance (ID: {$a->ocinstanceid}) in course in {$a->coursefullname} (ID: {$a->courseid}).';
+$string['notifycourseprocessed_subj'] = 'Life Cycle Opencast step course processed successfully';
+$string['notifycourseprocessed_body'] = 'The course "{$a->coursefullname}" (ID: {$a->courseid}) was successfully processed with workflow ({$a->ocworkflow}).';

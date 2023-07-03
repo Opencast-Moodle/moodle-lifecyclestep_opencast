@@ -110,6 +110,9 @@ class opencast extends libbase {
         // Instance setting for the 'octrace' field.
         $settings[] = new instance_setting('octrace', PARAM_ALPHA);
 
+        // Instance setting for the 'ocnotifyadmin' field.
+        $settings[] = new instance_setting('ocnotifyadmin', PARAM_ALPHA);
+
         // Return settings array.
         return $settings;
     }
@@ -155,6 +158,11 @@ class opencast extends libbase {
         $mform->addElement('select', 'octrace', get_string('mform_octrace', 'lifecyclestep_opencast'), $yesnooption);
         $mform->setDefault('octrace', LIFECYCLESTEP_OPENCAST_SELECT_NO);
         $mform->addHelpButton('octrace', 'mform_octrace', 'lifecyclestep_opencast');
+
+        // Add the 'ocnotifyadmin' field.
+        $mform->addElement('select', 'ocnotifyadmin', get_string('mform_ocnotifyadmin', 'lifecyclestep_opencast'), $yesnooption);
+        $mform->setDefault('ocnotifyadmin', LIFECYCLESTEP_OPENCAST_SELECT_YES);
+        $mform->addHelpButton('ocnotifyadmin', 'mform_ocnotifyadmin', 'lifecyclestep_opencast');
     }
 
     /**
@@ -162,12 +170,27 @@ class opencast extends libbase {
      * This is called in the same way from process_course() and process_waiting_course();
      */
     private function process_ocvideos($processid, $instanceid, $course) {
+        // Get caches.
+        $ocworkflowscache = \cache::make('lifecyclestep_opencast', 'ocworkflows');
+        $seriesvideoscache = \cache::make('lifecyclestep_opencast', 'seriesvideos');
+        $deletedvideoscache = \cache::make('lifecyclestep_opencast', 'deletedvideos');
+
+        // Get the step instance setting.
+        $ocstepsettings = settings_manager::get_settings($instanceid, settings_type::STEP);
         // Get the step instance setting for octrace.
-        $octrace = settings_manager::get_settings($instanceid, settings_type::STEP)['octrace'];
+        $octrace = $ocstepsettings['octrace'];
         if ($octrace == LIFECYCLESTEP_OPENCAST_SELECT_YES) {
             $octraceenabled = true;
         } else {
             $octraceenabled = false;
+        }
+
+        // Get the step instance setting for ocnotifyadmin.
+        $ocnotifyadmin = $ocstepsettings['ocnotifyadmin'];
+        if ($ocnotifyadmin == LIFECYCLESTEP_OPENCAST_SELECT_YES) {
+            $ocnotifyadmin = true;
+        } else {
+            $ocnotifyadmin = false;
         }
 
         // Get the global Opencast rate limiter setting.
@@ -194,10 +217,37 @@ class opencast extends libbase {
             }
 
             // Get the configured OC workdlow.
-            $ocworkflow = settings_manager::get_settings($instanceid, settings_type::STEP)['ocworkflow_instance' . $ocinstance->id];
+            $ocworkflow = $ocstepsettings['ocworkflow_instance' . $ocinstance->id];
 
             // Get an APIbridge instance for this OCinstance.
             $apibridge = \block_opencast\local\apibridge::get_instance($ocinstance->id);
+
+            // Check if workflow exists.
+            $ocworkflows = [];
+            if ($cacheresult = $ocworkflowscache->get($ocinstance->id)) {
+                if ($cacheresult->expiry > time()) {
+                    $ocworkflows = $cacheresult->ocworkflows;
+                }
+            }
+            if (empty($ocworkflows)) {
+                $ocworkflows = $apibridge->get_existing_workflows();
+                $cacheobj = new \stdClass();
+                $cacheobj->expiry = strtotime('tomorrow midnight');
+                $cacheobj->ocworkflows = $ocworkflows;
+                $ocworkflowscache->set($ocinstance->id, $cacheobj);
+            }
+            if (count($ocworkflows) == 0 || !array_key_exists($ocworkflow, $ocworkflows)) {
+                // Trace.
+                if ($octraceenabled) {
+                    mtrace('...   ERROR: The workflow (' . $ocworkflow . ') does not exist.');
+                }
+                // Notify admin.
+                if ($ocnotifyadmin) {
+                    \lifecyclestep_opencast\notification_helper::notify_error($course, $video, $ocworkflow);
+                }
+                // Waiting for the itteration to be managed.
+                return step_response::waiting();
+            }
 
             // Get the course's series.
             $courseseries = $apibridge->get_course_series($course->id);
@@ -215,6 +265,12 @@ class opencast extends libbase {
                     mtrace("...   ERROR: There was an error while preparing course (ID: {$course->id} ) series: " .
                         $e->getMessage());
                 }
+                // Notify admin.
+                if ($ocnotifyadmin) {
+                    \lifecyclestep_opencast\notification_helper::notify_error(
+                        $course, $ocinstance->id, $ocworkflow, $e->getMessage()
+                    );
+                }
                 // Make sure $availablecourseseries is empty.
                 $availablecourseseries = array();
             }
@@ -227,7 +283,22 @@ class opencast extends libbase {
                 }
 
                 // Get the videos within the series.
-                $seriesvideos = $apibridge->get_series_videos($series->series);
+                $seriesvideos = new \stdClass();
+                // Prepare cachable object.
+                $seriesvideoscacheobj = new \stdClass();
+                $seriesvideoscacheobj->expiry = strtotime('tomorrow midnight');
+                if ($cacheresult = $seriesvideoscache->get($series->series)) {
+                    if ($cacheresult->expiry > time()) {
+                        $seriesvideos = $cacheresult->seriesvideos;
+                    }
+                }
+                // If it is the first check, we get all videos, otherwise we use caching system to increase performance.
+                if (!property_exists($seriesvideos, 'videos')) {
+                    $seriesvideos = $apibridge->get_series_videos($series->series);
+                    $seriesvideoscacheobj->seriesvideos = $seriesvideos;
+                    $seriesvideoscache->set($series->series, $seriesvideoscacheobj);
+                }
+
 
                 // If there was an error retrieving the series videos, skip this series.
                 if ($seriesvideos->error) {
@@ -235,15 +306,26 @@ class opencast extends libbase {
                     if ($octraceenabled) {
                         mtrace('...   ERROR: There was an error retrieving the series videos, the series will be skipped.');
                     }
-
+                    // Removing the cache.
+                    $seriesvideoscache->delete($series->series);
                     continue;
+                }
+                // Handle deleted videos via caching system.
+                $deletedvideos = [];
+                if ($cacheresult = $deletedvideoscache->get($series->series)) {
+                    $deletedvideos = $cacheresult->deletedvideos ?? [];
                 }
 
                 // Iterate over the videos.
                 foreach ($seriesvideos->videos as $video) {
+                    // Skip if the video has been deleted or is in the process of being deleted.
+                    if (in_array($video->identifier, $deletedvideos)) {
+                        continue;
+                    }
+
                     // Trace.
                     if ($octraceenabled) {
-                        mtrace('...    Start processing the Opencast video '.$video->identifier.'.');
+                        mtrace('...    Start processing the Opencast video ' . $video->identifier . '.');
                     }
 
                     // If the video is currently processing anything, skip this video.
@@ -252,13 +334,11 @@ class opencast extends libbase {
                         if ($octraceenabled) {
                             mtrace('...     NOTICE: The video is already being processed currently, the video will be skipped.');
                         }
-
                         continue;
                     }
 
-                    // Start the configured workflow for this video.
-                    $workflowresult = $apibridge->start_workflow($video->identifier, $ocworkflow);
-
+                    // Perform start workflow for this video.
+                    $workflowresult = $this->perform_start_workflow($ocinstance->id, $video->identifier, $ocworkflow);
                     // If the workflow wasn't started successfully, skip this video.
                     if ($workflowresult == false) {
                         // Trace.
@@ -266,21 +346,43 @@ class opencast extends libbase {
                             mtrace('...     ERROR: The workflow couldn\'t be started properly for this video.');
                         }
 
-                        // TODO: Proper error reporting and retry management.
+                        // Notify admin.
+                        if ($ocnotifyadmin) {
+                            \lifecyclestep_opencast\notification_helper::notify_failed_workflow(
+                                $course, $ocinstance->id, $video, $ocworkflow
+                            );
+                        }
+
+                        // Remove the series videos cache as it might contain out-dated videos.
+                        if ($seriesvideoscache->has($series->series)) {
+                            $seriesvideoscache->delete($series->series);
+                        }
+
                         return step_response::waiting();
 
                         // Otherwise.
                     } else {
+                        // Record the deleted videos to avoid reprocessing it.
+                        $deletedvideos[] = $video->identifier;
+                        // Save the cache here to make sure the record is up-to-date.
+                        $deletedvideoscacheobj = new \stdClass();
+                        $deletedvideoscacheobj->deletedvideos = $deletedvideos;
+                        $deletedvideoscache->set($series->series, $deletedvideoscacheobj);
+
                         // Trace.
                         if ($octraceenabled) {
-                            mtrace('...     SUCCESS: The workflow was started for this video.');
+                            $mtracemessage = '...     SUCCESS: The workflow was started for this video.';
+                            if ($ocworkflow === 'delete') {
+                                $mtracemessage .= ' Deletion process is registered in Opencast delete jobs cron.';
+                            }
+                            mtrace($mtracemessage);
                         }
 
                         // If the rate limiter is enabled.
                         if ($ratelimiterenabled == true) {
                             // Trace.
                             if ($octraceenabled) {
-                                mtrace('...     NOTICE: As the Opencast rate limiter is enabled in the step settings, processing the videos in this course will be stopped now and will continue in the next run of this scheduled task..');
+                                mtrace('...     NOTICE: As the Opencast rate limiter is enabled in the step settings, processing the videos in this course will be stopped now and will continue in the next run of this scheduled task.');
                             }
 
                             // Return waiting so that the processing will continue on the next run of this scheduled task.
@@ -294,6 +396,21 @@ class opencast extends libbase {
                     mtrace('...   Finished processing the videos in Opencast series '.$series->series.'.');
                 }
 
+                // Remove the series videos cache as it is done processing.
+                if ($seriesvideoscache->has($series->series)) {
+                    $seriesvideoscache->delete($series->series);
+                }
+
+                // Remove deleted videos cache for the series.
+                if ($deletedvideoscache->has($series->series)) {
+                    $deletedvideoscache->delete($series->series);
+                }
+
+                // Removing the shared series cache, if exists.
+                $sharedseriescache = \cache::make('lifecyclestep_opencast', 'sharedseries');
+                if ($sharedseriescache->has($series->series)) {
+                    $sharedseriescache->delete($series->series);
+                }
             }
 
             // Trace.
@@ -305,6 +422,13 @@ class opencast extends libbase {
         // Trace.
         if ($octraceenabled) {
             mtrace('... Finished processing the videos in course '.$course->id.'.');
+        }
+
+        // Notify admin.
+        if ($ocnotifyadmin) {
+            \lifecyclestep_opencast\notification_helper::notify_course_processed(
+                $course, $ocworkflow
+            );
         }
 
         // At this point, all videos have been processed and the step is done.
@@ -332,13 +456,27 @@ class opencast extends libbase {
                 );
                 // If the series is used by another course, check if the course exists, leave the serie if it does.
                 if (count($seriesmappings) > 1) {
+                    // Get shared series cache.
+                    $sharedseriescache = \cache::make('lifecyclestep_opencast', 'sharedseries');
+                    $seriescourses = [];
+                    if ($sharedseriescache->has($series->series)) {
+                        $cacheresult = $sharedseriescache->get($series->series);
+                        $seriescourses = $cacheresult->seriescourses;
+                    }
+                    if (!in_array($courseid, $seriescourses)) {
+                        $seriescourses[] = $courseid;
+                    }
+                    $cacheobj = new \stdClass();
+                    $cacheobj->seriescourses = $seriescourses;
+                    $sharedseriescache->set($series->series, $cacheobj);
                     foreach ($seriesmappings as $seriesmapping) {
                         $mappedcourseid = $seriesmapping->get('courseid');
-                        // We skip the current one.
-                        if ($mappedcourseid == $courseid) {
+                        // We skip the current one or if it is going to be removed just like the other ones.
+                        if ($mappedcourseid == $courseid || in_array($mappedcourseid, $seriescourses)) {
                             continue;
                         }
-                        // Check if the other course exists.
+
+                        // If it hits here, it means that the course is most likely an active one and exists, so we check.
                         if ($DB->record_exists('course', ['id' => $mappedcourseid])) {
                             $isvalid = false;
                             break 1;
@@ -349,7 +487,45 @@ class opencast extends libbase {
             default:
                 break;
         }
+
         // By now it is already decided whether to pass the series to be processed or not.
         return ($isvalid ? $series : null);
+    }
+
+    /**
+     * Performs start workflow on events and also every other processes that must be done after the workflow has started.
+     *
+     * @param int $ocinstanceid the opencast instance id
+     * @param string $videoidentifier video identifier
+     * @param string $ocworkflow opencast workflow
+     *
+     * @return bool whether the workflow has started or not.
+     */
+    private function perform_start_workflow($ocinstanceid, $videoidentifier, $ocworkflow) {
+        global $DB;
+        // Get an APIbridge instance.
+        $apibridge = \block_opencast\local\apibridge::get_instance($ocinstanceid);
+        $workflowresult = $apibridge->start_workflow($videoidentifier, $ocworkflow);
+        if ($workflowresult) {
+            switch ($ocworkflow) {
+                // In case that workflow is set to delete, we need to insert the record to block_opencast_deletejob table,
+                // in order for the respective cron job to pick it up and do whatever it needs to do to delete the event.
+                case 'delete':
+                    $deletejobrecord = [
+                        'opencasteventid' => $videoidentifier,
+                        'ocinstanceid' => $ocinstanceid
+                    ];
+                    if (!$DB->record_exists('block_opencast_deletejob', $deletejobrecord)) {
+                        $deletejobrecord['timecreated'] = time();
+                        $deletejobrecord['timemodified'] = time();
+                        $deletejobrecord['failed'] = false;
+                        $DB->insert_record('block_opencast_deletejob', $deletejobrecord);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return $workflowresult;
     }
 }
