@@ -33,9 +33,9 @@ if ($ADMIN->fulltree) {
                 LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no'));
 
         // Create workflow tag setting.
-        $settings->add(new admin_setting_configtext('lifecyclestep_opencast/workflowtag',
-                get_string('setting_workflowtag', 'lifecyclestep_opencast'),
-                get_string('setting_workflowtag_desc', 'lifecyclestep_opencast'),
+        $settings->add(new admin_setting_configtext('lifecyclestep_opencast/workflowtags',
+                get_string('setting_workflowtags', 'lifecyclestep_opencast'),
+                get_string('setting_workflowtags_desc', 'lifecyclestep_opencast'),
                 'delete'));
 
         // Create rate limiter setting.
@@ -44,4 +44,4 @@ if ($ADMIN->fulltree) {
                 get_string('setting_ratelimiter_desc', 'lifecyclestep_opencast'),
                 LIFECYCLESTEP_OPENCAST_SELECT_NO,
                 $yesnooption));
-}    
+}

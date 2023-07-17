@@ -32,10 +32,7 @@ $definitions = array(
         'seriesvideos' => array(
                 'mode' => cache_store::MODE_APPLICATION
         ),
-        'sharedseries' => array(
-                'mode' => cache_store::MODE_APPLICATION
-        ),
-        'deletedvideos' => array(
+        'processedvideos' => array(
                 'mode' => cache_store::MODE_APPLICATION
         ),
 );

@@ -33,10 +33,12 @@ $string['mform_ocnotifyadmin'] = 'Enable notify admin';
 $string['mform_ocnotifyadmin_help'] = 'When enabled, admins will be notified in case something does not work as expected i.e failures and errors.';
 $string['mform_ocworkflow'] = 'Opencast workflow';
 $string['mform_ocworkflow_help'] = 'The opencast workflow to perform on the event of a series eligibale for the step.';
+$string['mform_ocisdelete'] = 'Enable deletion process';
+$string['mform_ocisdelete_help'] = 'When enabled, all related procedures for series and videos deletion will be processed and applied.';
 $string['setting_ratelimiter'] = 'Opencast rate limiter';
 $string['setting_ratelimiter_desc'] = 'This option makes the step to only be performed once for an opencast event. Disabling this option processes all events of a series in one go.';
-$string['setting_workflowtag'] = 'Opencast workflow tag';
-$string['setting_workflowtag_desc'] = 'It is meant to be used to extract all opencast workflows with the same tag, which at the end provides a list of workflows to select from in a step.';
+$string['setting_workflowtags'] = 'Opencast workflow tags';
+$string['setting_workflowtags_desc'] = 'A comma separated list of workflow tags, to get the related workflows from Opencast, which then could be selected for each step to be run agains existing events.<br> NOTE: if empty \'delete\' tag will be used.';
 
 
 $string['privacy:metadata'] = 'The "Opencast step" subplugin of the admin tool "Course Life Cycle" does not store any personal data.';
@@ -51,3 +53,5 @@ $string['errorworkflownotexists_subj'] = 'Life Cycle Opencast step workflow was 
 $string['errorworkflownotexists_body'] = 'The workflow ({$a->ocworkflow}) was not found in opencast instance (ID: {$a->ocinstanceid}) in course in {$a->coursefullname} (ID: {$a->courseid}).';
 $string['notifycourseprocessed_subj'] = 'Life Cycle Opencast step course processed successfully';
 $string['notifycourseprocessed_body'] = 'The course "{$a->coursefullname}" (ID: {$a->courseid}) was successfully processed with workflow ({$a->ocworkflow}).';
+$string['error_removeseriesmapping'] = 'Unable to remove series mapping record.';
+$string['error_removeseriestacl'] = 'Unable to remove course ACLs from the series and its events properly.';
