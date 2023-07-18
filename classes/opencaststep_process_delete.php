@@ -210,7 +210,9 @@ class opencaststep_process_delete {
                 }
 
                 // Check if all videos are processed, then we set the flag to remove the seriesmapping as well.
-                if (count($stepprocessedvideos[$course->id][$series->series]) === count($seriesvideos->videos)) {
+                if (isset($stepprocessedvideos) && isset($stepprocessedvideos[$course->id]) &&
+                    isset($stepprocessedvideos[$course->id][$series->series]) &&
+                    count($stepprocessedvideos[$course->id][$series->series]) === count($seriesvideos->videos)) {
                     $removeseriesmapping = true;
                 }
             }
