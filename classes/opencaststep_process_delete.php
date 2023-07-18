@@ -70,7 +70,7 @@ class opencaststep_process_delete {
         foreach ($courseseries as $series) {
             // Trace.
             if ($octraceenabled) {
-                mtrace('...   Start processing the videos in Opencast series '.$series->series.'.');
+                mtrace('...         Start processing the videos in Opencast series '.$series->series.'.');
             }
 
             // Get the videos within the series.
@@ -94,7 +94,7 @@ class opencaststep_process_delete {
             if ($seriesvideos->error) {
                 // Trace.
                 if ($octraceenabled) {
-                    mtrace('...   ERROR: There was an error retrieving the series videos, the series will be skipped.');
+                    mtrace('...         ERROR: There was an error retrieving the series videos, the series will be skipped.');
                 }
                 // Removing the cache.
                 $seriesvideoscache->delete($series->series);
@@ -114,11 +114,11 @@ class opencaststep_process_delete {
             // This happens when a series is shared among multiple courses via ACL change.
             if (count($seriesmappings) > 1) {
                 // In this case, we only take out the acls from the series and its videos.
-                $seriesunlinked = $apibridge->unlink_series_from_course($courseid, $series->series);
+                $seriesunlinked = $apibridge->unlink_series_from_course($course->id, $series->series);
                 if (!$seriesunlinked) {
                     // Trace.
                     if ($octraceenabled) {
-                        mtrace('...     ERROR: Unable to remove course ACLs from the series and its events properly.');
+                        mtrace('...         ERROR: Unable to remove course ACLs from the series and its events properly.');
                     }
 
                     // Notify admin.
@@ -129,6 +129,10 @@ class opencaststep_process_delete {
                     }
 
                     return step_response::WAITING;
+                }
+
+                if ($octraceenabled) {
+                    mtrace('...             Series has been unlinked from course.');
                 }
 
                 // Set the flag to remove the seriesmapping record as well.
@@ -151,14 +155,14 @@ class opencaststep_process_delete {
 
                     // Trace.
                     if ($octraceenabled) {
-                        mtrace('...    Start processing the Opencast video '.$video->identifier.'.');
+                        mtrace('...             Start processing the Opencast video '.$video->identifier.'.');
                     }
 
                     // If the video is currently processing anything, skip this video.
                     if ($video->processing_state != 'SUCCEEDED') {
                         // Trace.
                         if ($octraceenabled) {
-                            mtrace('...     NOTICE: The video is already being processed currently, the video will be skipped.');
+                            mtrace('...             NOTICE: The video is already being processed currently, the video will be skipped.');
                         }
 
                         continue;
@@ -171,7 +175,7 @@ class opencaststep_process_delete {
                     if ($workflowresult == false) {
                         // Trace.
                         if ($octraceenabled) {
-                            mtrace('...     ERROR: The workflow couldn\'t be started properly for this video.');
+                            mtrace('...             ERROR: The workflow couldn\'t be started properly for this video.');
                         }
 
                         // Notify admin.
@@ -187,7 +191,7 @@ class opencaststep_process_delete {
                     } else {
                         // Trace.
                         if ($octraceenabled) {
-                            mtrace('...     SUCCESS: The workflow was started for this video. Deletion process is registered in Opencast delete jobs cron.');
+                            mtrace('...             SUCCESS: The workflow was started for this video. Deletion process is registered in Opencast delete jobs cron.');
                         }
 
                         // Keep track of processed videos to avoid redundancy in the next iterationa.
@@ -200,7 +204,7 @@ class opencaststep_process_delete {
                         if ($ratelimiterenabled == true) {
                             // Trace.
                             if ($octraceenabled) {
-                                mtrace('...     NOTICE: As the Opencast rate limiter is enabled in the step settings, processing the videos in this course will be stopped now and will continue in the next run of this scheduled task..');
+                                mtrace('...             NOTICE: As the Opencast rate limiter is enabled in the step settings, processing the videos in this course will be stopped now and will continue in the next run of this scheduled task..');
                             }
 
                             // Return waiting so that the processing will continue on the next run of this scheduled task.
@@ -215,11 +219,6 @@ class opencaststep_process_delete {
                     count($stepprocessedvideos[$course->id][$series->series]) === count($seriesvideos->videos)) {
                     $removeseriesmapping = true;
                 }
-            }
-
-            // Trace.
-            if ($octraceenabled) {
-                mtrace('...   Finished processing the videos in Opencast series '.$series->series.'.');
             }
 
             // Remove the series videos cache as it is done processing.
@@ -238,7 +237,7 @@ class opencaststep_process_delete {
                     if (!$mapping->delete()) {
                         // Trace.
                         if ($octraceenabled) {
-                            mtrace('...     ERROR: Unable to remove series mapping.');
+                            mtrace('...         ERROR: Unable to remove series mapping.');
                         }
 
                         // Notify admin.
@@ -253,12 +252,17 @@ class opencaststep_process_delete {
                 }
 
                 if ($octraceenabled) {
-                    mtrace('...   Finished unlinking the Opencast series '.$series->series.' from the course.');
+                    mtrace('...             Finished unlinking the Opencast series '.$series->series.' from the course.');
                 }
             } else {
                 if ($octraceenabled) {
-                    mtrace('...   NOTICE: Since there were unprocessed videos in the series '.$series->series.', the series mapping was not removed!');
+                    mtrace('...             NOTICE: Since there were unprocessed videos in the series '.$series->series.', the series mapping was not removed!');
                 }
+            }
+
+            // Trace.
+            if ($octraceenabled) {
+                mtrace('...         Finished processing the videos in Opencast series '.$series->series.'.');
             }
         }
 

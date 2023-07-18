@@ -70,7 +70,7 @@ class opencaststep_process_default {
         foreach ($courseseries as $series) {
             // Trace.
             if ($octraceenabled) {
-                mtrace('...   Start processing the videos in Opencast series '.$series->series.'.');
+                mtrace('...         Start processing the videos in Opencast series '.$series->series.'.');
             }
 
             // Get the videos within the series.
@@ -94,7 +94,7 @@ class opencaststep_process_default {
             if ($seriesvideos->error) {
                 // Trace.
                 if ($octraceenabled) {
-                    mtrace('...   ERROR: There was an error retrieving the series videos, the series will be skipped.');
+                    mtrace('...         ERROR: There was an error retrieving the series videos, the series will be skipped.');
                 }
                 // Removing the cache.
                 $seriesvideoscache->delete($series->series);
@@ -113,14 +113,14 @@ class opencaststep_process_default {
 
                 // Trace.
                 if ($octraceenabled) {
-                    mtrace('...    Start processing the Opencast video '.$video->identifier.'.');
+                    mtrace('...             Start processing the Opencast video '.$video->identifier.'.');
                 }
 
                 // If the video is currently processing anything, skip this video.
                 if ($video->processing_state != 'SUCCEEDED') {
                     // Trace.
                     if ($octraceenabled) {
-                        mtrace('...     NOTICE: The video is already being processed currently, the video will be skipped.');
+                        mtrace('...             NOTICE: The video is already being processed currently, the video will be skipped.');
                     }
 
                     continue;
@@ -133,7 +133,7 @@ class opencaststep_process_default {
                 if ($workflowresult == false) {
                     // Trace.
                     if ($octraceenabled) {
-                        mtrace('...     ERROR: The workflow couldn\'t be started properly for this video.');
+                        mtrace('...             ERROR: The workflow couldn\'t be started properly for this video.');
                     }
 
                     // Notify admin.
@@ -149,7 +149,7 @@ class opencaststep_process_default {
                 } else {
                     // Trace.
                     if ($octraceenabled) {
-                        mtrace('...     SUCCESS: The workflow was started for this video.');
+                        mtrace('...             SUCCESS: The workflow was started for this video.');
                     }
 
                     // Keep track of processed videos to avoid redundancy in the next iterationa.
@@ -162,7 +162,7 @@ class opencaststep_process_default {
                     if ($ratelimiterenabled == true) {
                         // Trace.
                         if ($octraceenabled) {
-                            mtrace('...     NOTICE: As the Opencast rate limiter is enabled in the step settings, processing the videos in this course will be stopped now and will continue in the next run of this scheduled task..');
+                            mtrace('...             NOTICE: As the Opencast rate limiter is enabled in the step settings, processing the videos in this course will be stopped now and will continue in the next run of this scheduled task..');
                         }
 
                         // Return waiting so that the processing will continue on the next run of this scheduled task.
@@ -173,7 +173,7 @@ class opencaststep_process_default {
 
             // Trace.
             if ($octraceenabled) {
-                mtrace('...   Finished processing the videos in Opencast series '.$series->series.'.');
+                mtrace('...         Finished processing the videos in Opencast series '.$series->series.'.');
             }
 
             // Remove the series videos cache as it is done processing.

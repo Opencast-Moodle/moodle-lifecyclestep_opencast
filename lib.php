@@ -274,7 +274,7 @@ class opencast extends libbase {
             if ($ocisdelete) {
                 // Trace.
                 if ($octraceenabled) {
-                    mtrace('...  Start deletion process for series and videos.');
+                    mtrace('...     Start deletion process for series and videos.');
                 }
                 $step_response = \lifecyclestep_opencast\opencaststep_process_delete::process(
                     $course, $ocinstance->id, $ocworkflow, $instanceid, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
@@ -282,7 +282,7 @@ class opencast extends libbase {
             } else {
                 // Trace.
                 if ($octraceenabled) {
-                    mtrace('...  Start regular process for series and videos.');
+                    mtrace('...     Start regular process for series and videos.');
                 }
                 $step_response = \lifecyclestep_opencast\opencaststep_process_default::process(
                     $course, $ocinstance->id, $ocworkflow, $instanceid, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
