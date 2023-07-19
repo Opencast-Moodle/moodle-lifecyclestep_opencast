@@ -41,13 +41,14 @@ class opencaststep_process_delete {
      * @param int $ocinstanceid
      * @param string $ocworkflow
      * @param int $instanceid
+     * @param bool $ocremoveseriesmappingenabled
      * @param bool $octraceenabled
      * @param bool $ocnotifyadminenabled
      * @param bool $ratelimiterenabled
      *
      * @return string the process response, empty if no waiting is required.
      */
-    public static function process($course, $ocinstanceid, $ocworkflow, $instanceid, $octraceenabled,
+    public static function process($course, $ocinstanceid, $ocworkflow, $instanceid, $ocremoveseriesmappingenabled, $octraceenabled,
         $ocnotifyadminenabled, $ratelimiterenabled) {
         // Prepare series videos cache.
         $seriesvideoscache = \cache::make('lifecyclestep_opencast', 'seriesvideos');
@@ -214,9 +215,10 @@ class opencaststep_process_delete {
                 }
 
                 // Check if all videos are processed, then we set the flag to remove the seriesmapping as well.
-                if (isset($stepprocessedvideos) && isset($stepprocessedvideos[$course->id]) &&
+                if ((isset($stepprocessedvideos) && isset($stepprocessedvideos[$course->id]) &&
                     isset($stepprocessedvideos[$course->id][$series->series]) &&
-                    count($stepprocessedvideos[$course->id][$series->series]) === count($seriesvideos->videos)) {
+                    count($stepprocessedvideos[$course->id][$series->series]) === count($seriesvideos->videos))
+                    || empty($seriesvideos->videos)) {
                     $removeseriesmapping = true;
                 }
             }
@@ -226,8 +228,8 @@ class opencaststep_process_delete {
                 $seriesvideoscache->delete($series->series);
             }
 
-            // Now that the series has been processed completely, we try to unlink it as well.
-            if ($removeseriesmapping) {
+            // Now that the series has been processed completely, we try to remove the series mapping as well.
+            if ($removeseriesmapping && $ocremoveseriesmappingenabled) {
                 $mapping = \tool_opencast\seriesmapping::get_record(
                     array('series' => $series->series, 'ocinstanceid' => $ocinstanceid, 'courseid' => $course->id)
                     , true);

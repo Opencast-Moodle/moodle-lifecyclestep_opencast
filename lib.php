@@ -107,6 +107,7 @@ class opencast extends libbase {
             // Instance setting for the 'ocworkflow' field.
             $settings[] = new instance_setting('ocworkflow_instance'.$instance->id, PARAM_ALPHANUMEXT);
             $settings[] = new instance_setting('ocisdelete'.$instance->id, PARAM_ALPHA);
+            $settings[] = new instance_setting('ocremoveseriesmapping'.$instance->id, PARAM_ALPHA);
         }
 
         // Instance setting for the 'octrace' field.
@@ -159,6 +160,11 @@ class opencast extends libbase {
             $mform->addElement('select', 'ocisdelete'.$instance->id, get_string('mform_ocisdelete', 'lifecyclestep_opencast'), $yesnooption);
             $mform->setDefault('ocisdelete'.$instance->id, LIFECYCLESTEP_OPENCAST_SELECT_NO);
             $mform->addHelpButton('ocisdelete'.$instance->id, 'mform_ocisdelete', 'lifecyclestep_opencast');
+
+            // Add the 'ocremoveseriesmapping' field.
+            $mform->addElement('select', 'ocremoveseriesmapping'.$instance->id, get_string('mform_ocremoveseriesmapping', 'lifecyclestep_opencast'), $yesnooption);
+            $mform->setDefault('ocremoveseriesmapping'.$instance->id, LIFECYCLESTEP_OPENCAST_SELECT_YES);
+            $mform->addHelpButton('ocremoveseriesmapping'.$instance->id, 'mform_ocremoveseriesmapping', 'lifecyclestep_opencast');
         }
 
         // Add a heading for the general settings.
@@ -236,6 +242,14 @@ class opencast extends libbase {
                 $ocisdelete = false;
             }
 
+            // Get the remove series mapping flag. ocremoveseriesmapping
+            $ocremoveseriesmapping = $ocstepsettings['ocremoveseriesmapping' . $ocinstance->id];
+            if ($ocremoveseriesmapping == LIFECYCLESTEP_OPENCAST_SELECT_YES) {
+                $ocremoveseriesmappingenabled = true;
+            } else {
+                $ocremoveseriesmappingenabled = false;
+            }
+
             // Get an APIbridge instance for this OCinstance.
             $apibridge = \block_opencast\local\apibridge::get_instance($ocinstance->id);
 
@@ -277,8 +291,13 @@ class opencast extends libbase {
                     mtrace('...     Start deletion process for series and videos.');
                 }
                 $step_response = \lifecyclestep_opencast\opencaststep_process_delete::process(
-                    $course, $ocinstance->id, $ocworkflow, $instanceid, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
+                    $course, $ocinstance->id, $ocworkflow, $instanceid, $ocremoveseriesmappingenabled, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
                 );
+
+                // Trace.
+                if ($octraceenabled) {
+                    mtrace('...     Finished deletion process for series and videos.');
+                }
             } else {
                 // Trace.
                 if ($octraceenabled) {
@@ -287,6 +306,10 @@ class opencast extends libbase {
                 $step_response = \lifecyclestep_opencast\opencaststep_process_default::process(
                     $course, $ocinstance->id, $ocworkflow, $instanceid, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
                 );
+                // Trace.
+                if ($octraceenabled) {
+                    mtrace('...     Finished regular process for series and videos.');
+                }
             }
 
             // Evaluate step response, at this stage only waiting will be returned.
