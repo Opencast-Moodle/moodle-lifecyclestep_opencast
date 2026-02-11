@@ -18,21 +18,21 @@
  * Cache Definition for Opencast Step
  *
  * @package    lifecyclestep_opencast
- * @copyright  2023 Farbod Zamani Boroujeni, ELAN e.V.
+ * @copyright  2023 Farbod Zamani Boroujeni, elan e.V.
  * @author     Farbod Zamani Boroujeni <zamani@elan-ev.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$definitions = array(
-        'ocworkflows' => array(
-                'mode' => cache_store::MODE_APPLICATION
-        ),
-        'seriesvideos' => array(
-                'mode' => cache_store::MODE_APPLICATION
-        ),
-        'processedvideos' => array(
-                'mode' => cache_store::MODE_APPLICATION
-        ),
-);
+$definitions = [
+        'ocworkflows' => [
+                'mode' => cache_store::MODE_APPLICATION,
+        ],
+        'seriesvideos' => [
+                'mode' => cache_store::MODE_APPLICATION,
+        ],
+        'processedvideos' => [
+                'mode' => cache_store::MODE_APPLICATION,
+        ],
+];

@@ -25,11 +25,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'lifecyclestep_opencast';
-$plugin->version = 2023071800;
-$plugin->release = 'v4.1-r1';
-$plugin->requires = 2020061500;
-$plugin->supported = [39, 41];
+$plugin->version = 2026021100;
+$plugin->release = 'v4.5-r1';
+$plugin->requires = 2024100700;
+$plugin->supported = [405, 405];
 $plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = array('tool_lifecycle' => 2022033100,
-        'tool_opencast' => 2022032000,
-        'block_opencast' => 2022032000);
+$plugin->dependencies = [
+        'tool_lifecycle' => 2026012001,
+        'tool_opencast' => 2024111105,
+        'block_opencast' => 2025072506
+];

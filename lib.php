@@ -19,6 +19,7 @@
  *
  * @package    lifecyclestep_opencast
  * @copyright  2022 Alexander Bias, lern.link GmbH <alexander.bias@lernlink.de>
+ * @copyright  2026 Farbod Zamani Boroujeni, elan e.V. <zamani@elan-ev.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -30,6 +31,7 @@ use tool_lifecycle\settings_type;
 use tool_opencast\local\settings_api;
 use block_opencast\setting_helper;
 use lifecyclestep_opencast\notification_helper;
+use lifecyclestep_opencast\log_helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,18 +41,17 @@ require_once(__DIR__ . '/../lib.php');
 define('LIFECYCLESTEP_OPENCAST_SELECT_YES', 'yes');
 define('LIFECYCLESTEP_OPENCAST_SELECT_NO', 'no');
 
-
 /**
  * Admin tool "Course Life Cycle" - Subplugin "Opencast step" - Opencast class
  *
  * @package    lifecyclestep_opencast
  * @copyright  2022 Alexander Bias, lern.link GmbH <alexander.bias@lernlink.de>
+ * @copyright  2026 Farbod Zamani Boroujeni, elan e.V. <zamani@elan-ev.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class opencast extends libbase {
-
     /**
-     * Processes the course and returns a repsonse.
+     * Processes the course and returns a response.
      * The response tells either
      *  - that the subplugin is finished processing.
      *  - that the subplugin is not yet finished processing.
@@ -67,7 +68,7 @@ class opencast extends libbase {
     }
 
     /**
-     * Processes the course in status waiting and returns a repsonse.
+     * Processes the course in status waiting and returns a response.
      * The response tells either
      *  - that the subplugin is finished processing.
      *  - that the subplugin is not yet finished processing.
@@ -97,7 +98,7 @@ class opencast extends libbase {
      */
     public function instance_settings() {
         // Initialize settings array.
-        $settings = array();
+        $settings = [];
 
         // Get the configured OC instances.
         $ocinstances = settings_api::get_ocinstances();
@@ -105,9 +106,9 @@ class opencast extends libbase {
         // Iterate over the instances.
         foreach ($ocinstances as $instance) {
             // Instance setting for the 'ocworkflow' field.
-            $settings[] = new instance_setting('ocworkflow_instance'.$instance->id, PARAM_ALPHANUMEXT);
-            $settings[] = new instance_setting('ocisdelete'.$instance->id, PARAM_ALPHA);
-            $settings[] = new instance_setting('ocremoveseriesmapping'.$instance->id, PARAM_ALPHA);
+            $settings[] = new instance_setting('ocworkflow_instance' . $instance->id, PARAM_ALPHANUMEXT);
+            $settings[] = new instance_setting('ocisdelete' . $instance->id, PARAM_ALPHA);
+            $settings[] = new instance_setting('ocremoveseriesmapping' . $instance->id, PARAM_ALPHA);
         }
 
         // Instance setting for the 'octrace' field.
@@ -121,14 +122,14 @@ class opencast extends libbase {
     }
 
     /**
-     * This method can be overriden, to add form elements to the form_step_instance.
+     * This method can be overridden, to add form elements to the form_step_instance.
      * It is called in definition().
      * @param \MoodleQuickForm $mform
      */
     public function extend_add_instance_form_definition($mform) {
         // Prepare options array for select settings.
-        $yesnooption = array(LIFECYCLESTEP_OPENCAST_SELECT_YES => get_string('yes'),
-                LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no'));
+        $yesnooption = [LIFECYCLESTEP_OPENCAST_SELECT_YES => get_string('yes'),
+                LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no')];
 
         // Get the configured OC instances.
         $ocinstances = settings_api::get_ocinstances();
@@ -136,7 +137,11 @@ class opencast extends libbase {
         // Iterate over the instances.
         foreach ($ocinstances as $instance) {
             // Add a heading for the instance.
-            $headingstring = \html_writer::tag('h3', get_string('mform_ocinstanceheading', 'lifecyclestep_opencast', array('name' => $instance->name)));
+            $headingstring = \html_writer::tag('h3', get_string(
+                'mform_ocinstanceheading',
+                'lifecyclestep_opencast',
+                ['name' => $instance->name]
+            ));
             $mform->addElement('html', $headingstring);
 
             // Get workflow choices of this OC instance.
@@ -145,26 +150,42 @@ class opencast extends libbase {
                 $tags = 'delete';
             }
             $workflowchoices = setting_helper::load_workflow_choices($instance->id, $tags);
-            if ($workflowchoices instanceof \block_opencast\opencast_connection_exception ||
-                $workflowchoices instanceof \tool_opencast\empty_configuration_exception) {
+            if (
+                $workflowchoices instanceof \block_opencast\opencast_connection_exception ||
+                $workflowchoices instanceof \tool_opencast\empty_configuration_exception
+            ) {
                 $opencasterror = $workflowchoices->getMessage();
                 $workflowchoices = [null => get_string('adminchoice_noconnection', 'block_opencast')];
             }
 
             // Add the 'ocworkflow' field.
-            $mform->addElement('select', 'ocworkflow_instance'.$instance->id, get_string('mform_ocworkflow', 'lifecyclestep_opencast'),
-                    $workflowchoices);
-            $mform->addHelpButton('ocworkflow_instance'.$instance->id, 'mform_ocworkflow', 'lifecyclestep_opencast');
+            $mform->addElement(
+                'select',
+                'ocworkflow_instance' . $instance->id,
+                get_string('mform_ocworkflow', 'lifecyclestep_opencast'),
+                $workflowchoices
+            );
+            $mform->addHelpButton('ocworkflow_instance' . $instance->id, 'mform_ocworkflow', 'lifecyclestep_opencast');
 
             // Add the 'isdelete' field.
-            $mform->addElement('select', 'ocisdelete'.$instance->id, get_string('mform_ocisdelete', 'lifecyclestep_opencast'), $yesnooption);
-            $mform->setDefault('ocisdelete'.$instance->id, LIFECYCLESTEP_OPENCAST_SELECT_NO);
-            $mform->addHelpButton('ocisdelete'.$instance->id, 'mform_ocisdelete', 'lifecyclestep_opencast');
+            $mform->addElement(
+                'select',
+                'ocisdelete' . $instance->id,
+                get_string('mform_ocisdelete', 'lifecyclestep_opencast'),
+                $yesnooption
+            );
+            $mform->setDefault('ocisdelete' . $instance->id, LIFECYCLESTEP_OPENCAST_SELECT_NO);
+            $mform->addHelpButton('ocisdelete' . $instance->id, 'mform_ocisdelete', 'lifecyclestep_opencast');
 
             // Add the 'ocremoveseriesmapping' field.
-            $mform->addElement('select', 'ocremoveseriesmapping'.$instance->id, get_string('mform_ocremoveseriesmapping', 'lifecyclestep_opencast'), $yesnooption);
-            $mform->setDefault('ocremoveseriesmapping'.$instance->id, LIFECYCLESTEP_OPENCAST_SELECT_YES);
-            $mform->addHelpButton('ocremoveseriesmapping'.$instance->id, 'mform_ocremoveseriesmapping', 'lifecyclestep_opencast');
+            $mform->addElement(
+                'select',
+                'ocremoveseriesmapping' . $instance->id,
+                get_string('mform_ocremoveseriesmapping', 'lifecyclestep_opencast'),
+                $yesnooption
+            );
+            $mform->setDefault('ocremoveseriesmapping' . $instance->id, LIFECYCLESTEP_OPENCAST_SELECT_YES);
+            $mform->addHelpButton('ocremoveseriesmapping' . $instance->id, 'mform_ocremoveseriesmapping', 'lifecyclestep_opencast');
         }
 
         // Add a heading for the general settings.
@@ -200,6 +221,8 @@ class opencast extends libbase {
             $octraceenabled = false;
         }
 
+        $logtrace = new log_helper($octraceenabled);
+
         // Get the step instance setting for ocnotifyadmin.
         $ocnotifyadmin = $ocstepsettings['ocnotifyadmin'];
         if ($ocnotifyadmin == LIFECYCLESTEP_OPENCAST_SELECT_YES) {
@@ -207,6 +230,8 @@ class opencast extends libbase {
         } else {
             $ocnotifyadminenabled = false;
         }
+
+        $notificationhelper = new notification_helper($ocnotifyadminenabled);
 
         // Get the global Opencast rate limiter setting.
         $ratelimiter = get_config('lifecyclestep_opencast', 'ratelimiter');
@@ -217,9 +242,19 @@ class opencast extends libbase {
         }
 
         // Trace.
-        if ($octraceenabled) {
-            mtrace('... Start processing the videos in course '.$course->id.'.');
+        $coursefullname = get_string('coursefullnameunknown', 'lifecyclestep_opencast');
+        if ($course->fullname) {
+            $coursefullname = $course->fullname;
         }
+        $alangobj = (object)[
+            'courseid' => $course->id,
+            'coursefullname' => $coursefullname,
+        ];
+        $logtrace->print_mtrace(
+            get_string('mtrace_start_process_course', 'lifecyclestep_opencast', $alangobj),
+            '...',
+            1
+        );
 
         // Get the configured OC instances.
         $ocinstances = settings_api::get_ocinstances();
@@ -227,11 +262,16 @@ class opencast extends libbase {
         // Iterate over the instances.
         foreach ($ocinstances as $ocinstance) {
             // Trace.
-            if ($octraceenabled) {
-                mtrace('...  Start processing the videos in Opencast instance ' . $ocinstance->id . '.');
-            }
+            $alangobj = (object)[
+                'instanceid' => $ocinstance->id,
+            ];
+            $logtrace->print_mtrace(
+                get_string('mtrace_start_process_ocinstance', 'lifecyclestep_opencast', $alangobj),
+                '...',
+                2
+            );
 
-            // Get the configured OC workdlow.
+            // Get the configured OC workflow.
             $ocworkflow = $ocstepsettings['ocworkflow_instance' . $ocinstance->id];
 
             // Get the step instance setting for octrace.
@@ -242,7 +282,7 @@ class opencast extends libbase {
                 $ocisdelete = false;
             }
 
-            // Get the remove series mapping flag. ocremoveseriesmapping
+            // Get the remove series mapping flag.
             $ocremoveseriesmapping = $ocstepsettings['ocremoveseriesmapping' . $ocinstance->id];
             if ($ocremoveseriesmapping == LIFECYCLESTEP_OPENCAST_SELECT_YES) {
                 $ocremoveseriesmappingenabled = true;
@@ -267,73 +307,118 @@ class opencast extends libbase {
                 $cacheobj->ocworkflows = $ocworkflows;
                 $ocworkflowscache->set($ocinstance->id, $cacheobj);
             }
-            if (count($ocworkflows) == 0 || !array_key_exists($ocworkflow, $ocworkflows)) {
+            if (
+                empty($ocworkflow) ||
+                count($ocworkflows) == 0 ||
+                !array_key_exists($ocworkflow, $ocworkflows)
+            ) {
                 // Trace.
-                if ($octraceenabled) {
-                    mtrace('...   ERROR: The workflow (' . $ocworkflow . ') does not exist.');
-                }
+                $alangobj = (object)[
+                    'ocworkflow' => !empty($ocworkflow) ? $ocworkflow : '--',
+                ];
+                $logtrace->print_mtrace(
+                    get_string('mtrace_error_workflow_notexist', 'lifecyclestep_opencast', $alangobj),
+                    '...',
+                    3
+                );
+
                 // Notify admin.
-                if ($ocnotifyadminenabled) {
-                    notification_helper::notify_workflow_not_exists(
-                        $course, $ocinstance->id, $ocworkflow
-                    );
-                }
+                $notificationhelper->notify_workflow_not_exists(
+                    $course,
+                    $ocinstance->id,
+                    $ocworkflow
+                );
+
                 // Waiting for the itteration to be managed.
-                return step_response::waiting();
+                // return step_response::waiting();
+                // TODO: Ask if that is what that should actualy happen!
+                continue;
             }
 
             // By default, the step response should be empty, to allow the process to continue.
-            $step_response = '';
+            $stepresponse = '';
             // Decide whether the process should be for deletion or not.
             if ($ocisdelete) {
                 // Trace.
-                if ($octraceenabled) {
-                    mtrace('...     Start deletion process for series and videos.');
-                }
-                $step_response = \lifecyclestep_opencast\opencaststep_process_delete::process(
-                    $course, $ocinstance->id, $ocworkflow, $instanceid, $ocremoveseriesmappingenabled, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
+                $logtrace->print_mtrace(
+                    get_string('mtrace_start_process_deletion', 'lifecyclestep_opencast'),
+                    '...',
+                    3
+                );
+
+                $stepresponse = \lifecyclestep_opencast\opencaststep_process_delete::process(
+                    $course,
+                    $ocinstance->id,
+                    $ocworkflow,
+                    $instanceid,
+                    $ocremoveseriesmappingenabled,
+                    $octraceenabled,
+                    $ocnotifyadminenabled,
+                    $ratelimiterenabled
                 );
 
                 // Trace.
-                if ($octraceenabled) {
-                    mtrace('...     Finished deletion process for series and videos.');
-                }
+                $logtrace->print_mtrace(
+                    get_string('mtrace_finish_process_deletion', 'lifecyclestep_opencast'),
+                    '...',
+                    3
+                );
             } else {
                 // Trace.
-                if ($octraceenabled) {
-                    mtrace('...     Start regular process for series and videos.');
-                }
-                $step_response = \lifecyclestep_opencast\opencaststep_process_default::process(
-                    $course, $ocinstance->id, $ocworkflow, $instanceid, $octraceenabled, $ocnotifyadminenabled, $ratelimiterenabled
+                $logtrace->print_mtrace(
+                    get_string('mtrace_start_process_regular', 'lifecyclestep_opencast'),
+                    '...',
+                    3
+                );
+
+                $stepresponse = \lifecyclestep_opencast\opencaststep_process_default::process(
+                    $course,
+                    $ocinstance->id,
+                    $ocworkflow,
+                    $instanceid,
+                    $octraceenabled,
+                    $ocnotifyadminenabled,
+                    $ratelimiterenabled
                 );
                 // Trace.
-                if ($octraceenabled) {
-                    mtrace('...     Finished regular process for series and videos.');
-                }
+                $logtrace->print_mtrace(
+                    get_string('mtrace_finish_process_regular', 'lifecyclestep_opencast'),
+                    '...',
+                    3
+                );
             }
 
             // Evaluate step response, at this stage only waiting will be returned.
-            if ($step_response === step_response::WAITING) {
+            if ($stepresponse === step_response::WAITING) {
                 return step_response::waiting();
             }
 
             // Trace.
-            if ($octraceenabled) {
-                mtrace('...  Finished processing the videos in Opencast instance '.$ocinstance->id.'.');
-            }
+            $alangobj = (object) [
+                'instanceid' => $ocinstance->id,
+            ];
+            $logtrace->print_mtrace(
+                get_string('mtrace_finish_process_ocinstance', 'lifecyclestep_opencast', $alangobj),
+                '...',
+                2
+            );
         }
 
         // Trace.
-        if ($octraceenabled) {
-            mtrace('... Finished processing the videos in course '.$course->id.'.');
-        }
+        $alangobj = (object) [
+            'courseid' => $course->id,
+        ];
+        $logtrace->print_mtrace(
+            get_string('mtrace_finish_process_course', 'lifecyclestep_opencast', $alangobj),
+            '...',
+            1
+        );
 
         // Notify admin.
-        if ($ocnotifyadminenabled) {
-            notification_helper::notify_course_processed(
-                $course, $ocworkflow
-            );
-        }
+        $notificationhelper->notify_course_processed(
+            $course,
+            $ocworkflow
+        );
 
         // Try to clear the cache of the processed videos for this course.
         $processedvideoscache = \cache::make('lifecyclestep_opencast', 'processedvideos');
