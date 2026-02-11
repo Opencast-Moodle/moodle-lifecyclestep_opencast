@@ -12,6 +12,8 @@ jobs:
     with:
       requires-tool-plugin: true
       requires-block-plugin: true
+      requires-lifecycle-plugin: true
       branch-tool-plugin: MOODLE_405_STABLE
       branch-block-plugin: MOODLE_405_STABLE
+      branch-lifecycle-plugin: main
       branch-opencast-docker-default: 17.8
