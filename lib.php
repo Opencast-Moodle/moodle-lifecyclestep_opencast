@@ -205,7 +205,14 @@ class opencast extends libbase {
 
     /**
      * Helper function to process the Opencast videos.
-     * This is called in the same way from process_course() and process_waiting_course();
+     * This function processes videos across all configured Opencast instances for a given course.
+     * It handles both regular processing and deletion workflows, manages caching, rate limiting,
+     * and notifications.
+     *
+     * @param int $processid The process ID of the respective lifecycle process.
+     * @param int $instanceid The step instance ID.
+     * @param mixed $course The course object to be processed.
+     * @return step_response indicating whether processing is complete, waiting, or requires rollback.
      */
     private function process_ocvideos($processid, $instanceid, $course) {
         // Get caches.
