@@ -33,7 +33,7 @@ class notification_helper {
     private bool $notificationenabled = true;
     /**
      * Constructor function.
-     * @param bool $traceenabled A flag to make sure that the settings is applied.
+     * @param bool $notificationenabled A flag to make sure that the settings is enabled.
      */
     public function __construct(bool $notificationenabled) {
         $this->notificationenabled = $notificationenabled;
@@ -43,7 +43,6 @@ class notification_helper {
      *
      * @param stdClass $course the course object.
      * @param string $ocworkflow the workflow.
-     * @param string $error error details.
      */
     public function notify_course_processed($course, $ocworkflow) {
         if (!$this->notificationenabled) {
@@ -103,6 +102,7 @@ class notification_helper {
      * It is a complimentary function to use anywhere that fits, by default try catch in cron job is handled by moodle itself.
      *
      * @param stdClass $course the course object.
+     * @param int $ocinstanceid the opencast instance id.
      * @param string $ocworkflow the workflow.
      * @param string $error error details.
      */
@@ -134,8 +134,8 @@ class notification_helper {
      * It is a complimentary function to use anywhere that fits, by default try catch in cron job is handled by moodle itself.
      *
      * @param stdClass $course the course object.
+     * @param int $ocinstanceid the opencast instance id.
      * @param string $ocworkflow the workflow.
-     * @param string $error error details.
      */
     public function notify_workflow_not_exists($course, $ocinstanceid, $ocworkflow) {
         if (!$this->notificationenabled) {
