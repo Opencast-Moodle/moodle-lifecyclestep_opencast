@@ -171,7 +171,7 @@ class notification_helper {
     private function send_message($messagetype, $touser, $subject, $body, $format = FORMAT_PLAIN) {
         $message = new \core\message\message();
         $message->courseid = SITEID;
-        $message->component = 'block_opencast';
+        $message->component = 'tool_opencast';
         $message->name = $messagetype;
         $message->userfrom = \core_user::get_user(\core_user::NOREPLY_USER);
         $message->userto = $touser;

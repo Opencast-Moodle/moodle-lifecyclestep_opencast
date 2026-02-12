@@ -29,7 +29,7 @@ use tool_lifecycle\local\manager\settings_manager;
 use tool_lifecycle\local\response\step_response;
 use tool_lifecycle\settings_type;
 use tool_opencast\local\settings_api;
-use block_opencast\setting_helper;
+use tool_opencast\setting_helper;
 use lifecyclestep_opencast\notification_helper;
 use lifecyclestep_opencast\log_helper;
 
@@ -151,11 +151,11 @@ class opencast extends libbase {
             }
             $workflowchoices = setting_helper::load_workflow_choices($instance->id, $tags);
             if (
-                $workflowchoices instanceof \block_opencast\opencast_connection_exception ||
+                $workflowchoices instanceof \tool_opencast\opencast_connection_exception ||
                 $workflowchoices instanceof \tool_opencast\empty_configuration_exception
             ) {
                 $opencasterror = $workflowchoices->getMessage();
-                $workflowchoices = [null => get_string('adminchoice_noconnection', 'block_opencast')];
+                $workflowchoices = [null => get_string('adminchoice_noconnection', 'tool_opencast')];
             }
 
             // Add the 'ocworkflow' field.
@@ -298,7 +298,7 @@ class opencast extends libbase {
             }
 
             // Get an APIbridge instance for this OCinstance.
-            $apibridge = \block_opencast\local\apibridge::get_instance($ocinstance->id);
+            $apibridge = \tool_opencast\local\apibridge::get_instance($ocinstance->id);
 
             // Check if workflow exists.
             $ocworkflows = [];

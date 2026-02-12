@@ -74,7 +74,7 @@ class opencaststep_process_delete {
         }
 
         // Get an APIbridge instance for this OCinstance.
-        $apibridge = \block_opencast\local\apibridge::get_instance($ocinstanceid);
+        $apibridge = \tool_opencast\local\apibridge::get_instance($ocinstanceid);
 
         // Get the course's series.
         $courseseries = $apibridge->get_course_series($course->id);
@@ -341,7 +341,7 @@ class opencaststep_process_delete {
     }
 
     /**
-     * Performs deletiong of event by starting the workflow on event, and then hand it over to block_opencast_deletejob cron.
+     * Performs deletiong of event by starting the workflow on event, and then hand it over to tool_opencast_deletejob cron.
      *
      * @param int $ocinstanceid the opencast instance id
      * @param string $videoidentifier video identifier
@@ -352,18 +352,18 @@ class opencaststep_process_delete {
     private static function perform_delete_event($ocinstanceid, $videoidentifier, $ocworkflow) {
         global $DB;
         // Get an APIbridge instance.
-        $apibridge = \block_opencast\local\apibridge::get_instance($ocinstanceid);
+        $apibridge = \tool_opencast\local\apibridge::get_instance($ocinstanceid);
         $workflowresult = $apibridge->start_workflow($videoidentifier, $ocworkflow);
         if ($workflowresult) {
             $deletejobrecord = [
                 'opencasteventid' => $videoidentifier,
                 'ocinstanceid' => $ocinstanceid,
             ];
-            if (!$DB->record_exists('block_opencast_deletejob', $deletejobrecord)) {
+            if (!$DB->record_exists('tool_opencast_deletejob', $deletejobrecord)) {
                 $deletejobrecord['timecreated'] = time();
                 $deletejobrecord['timemodified'] = time();
                 $deletejobrecord['failed'] = false;
-                $DB->insert_record('block_opencast_deletejob', $deletejobrecord);
+                $DB->insert_record('tool_opencast_deletejob', $deletejobrecord);
             }
         }
         return $workflowresult;

@@ -67,7 +67,7 @@ class opencaststep_process_default {
         }
 
         // Get an APIbridge instance for this OCinstance.
-        $apibridge = \block_opencast\local\apibridge::get_instance($ocinstanceid);
+        $apibridge = \tool_opencast\local\apibridge::get_instance($ocinstanceid);
 
         // Get the course's series.
         $courseseries = $apibridge->get_course_series($course->id);
