@@ -86,7 +86,7 @@ If the deletion process is enabled for an Opencast instance, processing follows 
 
 If the deletion process is disabled, the step executes the configured workflow for each eligible event:
 
-![default process](./docs/delete.png)
+![default process](./docs/default.png)
 
 ### Sequence Diagram
 
