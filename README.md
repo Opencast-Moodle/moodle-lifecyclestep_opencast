@@ -6,7 +6,7 @@ This plugin was originally developed in 2022 by Alexander Bias from [lern.link](
 
 ## Requirements
 
-* Moodle 4.5+
+* Moodle 5.x+
 * Opencast 15+
 * Moodle Opencast API plugin (`tool_opencast`) 5.x
 * Moodle Course Life Cycle (`tool_lifecycle`) 5.x
@@ -85,7 +85,7 @@ If the deletion process is enabled for an Opencast instance, processing follows 
 
 If the deletion process is disabled, the step executes the configured workflow for each eligible event:
 
-![default process](./docs/delete.png)
+![default process](./docs/default.png)
 
 ### Sequence Diagram
 
