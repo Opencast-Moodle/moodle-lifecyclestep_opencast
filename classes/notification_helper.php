@@ -18,27 +18,36 @@
  * Helper class to handle notifications in Opencast Step
  *
  * @package    lifecyclestep_opencast
- * @copyright  2023 Farbod Zamani Boroujeni, ELAN e.V.
+ * @copyright  2023 Farbod Zamani Boroujeni, elan e.V.
  * @author     Farbod Zamani Boroujeni <zamani@elan-ev.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace lifecyclestep_opencast;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Helper class to handle notifications in Opencast Step
  */
 class notification_helper {
+    /** @var bool $notificationenabled Whether notifying feature is On. */
+    private bool $notificationenabled = true;
+    /**
+     * Constructor function.
+     * @param bool $notificationenabled A flag to make sure that the settings is enabled.
+     */
+    public function __construct(bool $notificationenabled) {
+        $this->notificationenabled = $notificationenabled;
+    }
     /**
      * Notifies admins when a course is processed.
      *
      * @param stdClass $course the course object.
      * @param string $ocworkflow the workflow.
-     * @param string $error error details.
      */
-    public static function notify_course_processed($course, $ocworkflow) {
+    public function notify_course_processed($course, $ocworkflow) {
+        if (!$this->notificationenabled) {
+            return;
+        }
         $coursefullname = get_string('coursefullnameunknown', 'lifecyclestep_opencast');
         if ($course->fullname) {
             $coursefullname = $course->fullname;
@@ -53,7 +62,7 @@ class notification_helper {
         $body = get_string('notifycourseprocessed_body', 'lifecyclestep_opencast', $a);
 
         $admin = get_admin();
-        self::send_message('error', $admin, $subject, $body);
+        $this->send_message('error', $admin, $subject, $body);
     }
 
     /**
@@ -64,7 +73,10 @@ class notification_helper {
      * @param stdClass $video the video object.
      * @param string $ocworkflow the workflow.
      */
-    public static function notify_failed_workflow($course, $ocinstanceid, $video, $ocworkflow) {
+    public function notify_failed_workflow($course, $ocinstanceid, $video, $ocworkflow) {
+        if (!$this->notificationenabled) {
+            return;
+        }
         $coursefullname = get_string('coursefullnameunknown', 'lifecyclestep_opencast');
         if ($course->fullname) {
             $coursefullname = $course->fullname;
@@ -75,14 +87,14 @@ class notification_helper {
             'ocworkflow' => $ocworkflow,
             'videotitle' => $video->title,
             'videoidentifier' => $video->identifier,
-            'ocinstanceid' => $ocinstanceid
+            'ocinstanceid' => $ocinstanceid,
         ];
 
         $subject = get_string('errorfailedworkflow_subj', 'lifecyclestep_opencast');
         $body = get_string('errorfailedworkflow_body', 'lifecyclestep_opencast', $a);
 
         $admin = get_admin();
-        self::send_message('error', $admin, $subject, $body);
+        $this->send_message('error', $admin, $subject, $body);
     }
 
     /**
@@ -90,10 +102,14 @@ class notification_helper {
      * It is a complimentary function to use anywhere that fits, by default try catch in cron job is handled by moodle itself.
      *
      * @param stdClass $course the course object.
+     * @param int $ocinstanceid the opencast instance id.
      * @param string $ocworkflow the workflow.
      * @param string $error error details.
      */
-    public static function notify_error($course, $ocinstanceid, $ocworkflow, $error) {
+    public function notify_error($course, $ocinstanceid, $ocworkflow, $error) {
+        if (!$this->notificationenabled) {
+            return;
+        }
         $coursefullname = get_string('coursefullnameunknown', 'lifecyclestep_opencast');
         if ($course->fullname) {
             $coursefullname = $course->fullname;
@@ -103,14 +119,14 @@ class notification_helper {
             'coursefullname' => $coursefullname,
             'ocworkflow' => $ocworkflow,
             'error' => $error,
-            'ocinstanceid' => $ocinstanceid
+            'ocinstanceid' => $ocinstanceid,
         ];
 
         $subject = get_string('errorexception_subj', 'lifecyclestep_opencast');
         $body = get_string('errorexception_body', 'lifecyclestep_opencast', $a);
 
         $admin = get_admin();
-        self::send_message('error', $admin, $subject, $body);
+        $this->send_message('error', $admin, $subject, $body);
     }
 
     /**
@@ -118,10 +134,13 @@ class notification_helper {
      * It is a complimentary function to use anywhere that fits, by default try catch in cron job is handled by moodle itself.
      *
      * @param stdClass $course the course object.
+     * @param int $ocinstanceid the opencast instance id.
      * @param string $ocworkflow the workflow.
-     * @param string $error error details.
      */
-    public static function notify_workflow_not_exists($course, $ocinstanceid, $ocworkflow) {
+    public function notify_workflow_not_exists($course, $ocinstanceid, $ocworkflow) {
+        if (!$this->notificationenabled) {
+            return;
+        }
         $coursefullname = get_string('coursefullnameunknown', 'lifecyclestep_opencast');
         if ($course->fullname) {
             $coursefullname = $course->fullname;
@@ -130,14 +149,14 @@ class notification_helper {
             'courseid' => $course->id,
             'coursefullname' => $coursefullname,
             'ocworkflow' => $ocworkflow,
-            'ocinstanceid' => $ocinstanceid
+            'ocinstanceid' => $ocinstanceid,
         ];
 
         $subject = get_string('errorworkflownotexists_subj', 'lifecyclestep_opencast');
         $body = get_string('errorworkflownotexists_body', 'lifecyclestep_opencast', $a);
 
         $admin = get_admin();
-        self::send_message('error', $admin, $subject, $body);
+        $this->send_message('error', $admin, $subject, $body);
     }
 
     /**
@@ -149,8 +168,7 @@ class notification_helper {
      * @param string $body Body
      * @param string $format Format
      */
-    private static function send_message($messagetype, $touser, $subject, $body, $format = FORMAT_PLAIN) {
-
+    private function send_message($messagetype, $touser, $subject, $body, $format = FORMAT_PLAIN) {
         $message = new \core\message\message();
         $message->courseid = SITEID;
         $message->component = 'block_opencast';
