@@ -15,30 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin tool "Course Life Cycle" - Subplugin "Opencast step" - Privacy Provider
+ * Cache Definition for Opencast Step
  *
  * @package    lifecyclestep_opencast
- * @copyright  2022 Alexander Bias, lern.link GmbH <alexander.bias@lernlink.de>
+ * @copyright  2023 Farbod Zamani Boroujeni, elan e.V.
+ * @author     Farbod Zamani Boroujeni <zamani@elan-ev.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace lifecyclestep_opencast\privacy;
+defined('MOODLE_INTERNAL') || die();
 
-/**
- * Privacy Subsystem implementing null_provider.
- *
- * @package    lifecyclestep_opencast
- * @copyright  2022 Alexander Bias, lern.link GmbH <alexander.bias@lernlink.de>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class provider implements \core_privacy\local\metadata\null_provider {
-    /**
-     * Get the language string identifier with the component's language
-     * file to explain why this plugin stores no data.
-     *
-     * @return string
-     */
-    public static function get_reason(): string {
-        return 'privacy:metadata';
-    }
-}
+$definitions = [
+        'ocworkflows' => [
+                'mode' => cache_store::MODE_APPLICATION,
+        ],
+        'seriesvideos' => [
+                'mode' => cache_store::MODE_APPLICATION,
+        ],
+        'processedvideos' => [
+                'mode' => cache_store::MODE_APPLICATION,
+        ],
+];

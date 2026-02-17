@@ -25,23 +25,27 @@
 defined('MOODLE_INTERNAL') || die();
 
 // Require the necessary libraries.
-require_once(__DIR__.'/lib.php');
+require_once(__DIR__ . '/lib.php');
 
 if ($ADMIN->fulltree) {
         // Prepare options array for select settings.
-        $yesnooption = array(LIFECYCLESTEP_OPENCAST_SELECT_YES => get_string('yes'),
-                LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no'));
+        $yesnooption = [LIFECYCLESTEP_OPENCAST_SELECT_YES => get_string('yes'),
+                LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no')];
 
         // Create workflow tag setting.
-        $settings->add(new admin_setting_configtext('lifecyclestep_opencast/workflowtag',
-                get_string('setting_workflowtag', 'lifecyclestep_opencast'),
-                get_string('setting_workflowtag_desc', 'lifecyclestep_opencast'),
-                'delete'));
+        $settings->add(new admin_setting_configtext(
+            'lifecyclestep_opencast/workflowtags',
+            get_string('setting_workflowtags', 'lifecyclestep_opencast'),
+            get_string('setting_workflowtags_desc', 'lifecyclestep_opencast'),
+            'delete'
+        ));
 
         // Create rate limiter setting.
-        $settings->add(new admin_setting_configselect('lifecyclestep_opencast/ratelimiter',
-                get_string('setting_ratelimiter', 'lifecyclestep_opencast'),
-                get_string('setting_ratelimiter_desc', 'lifecyclestep_opencast'),
-                LIFECYCLESTEP_OPENCAST_SELECT_NO,
-                $yesnooption));
-}    
+        $settings->add(new admin_setting_configselect(
+            'lifecyclestep_opencast/ratelimiter',
+            get_string('setting_ratelimiter', 'lifecyclestep_opencast'),
+            get_string('setting_ratelimiter_desc', 'lifecyclestep_opencast'),
+            LIFECYCLESTEP_OPENCAST_SELECT_NO,
+            $yesnooption
+        ));
+}
