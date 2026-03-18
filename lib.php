@@ -177,6 +177,8 @@ class opencast extends libbase {
                 $workflowchoices
             );
             $mform->addHelpButton($ocworkflowelementid, 'mform_ocworkflow', 'lifecyclestep_opencast');
+            // We make the ocworkflow required!
+            $mform->addRule($ocworkflowelementid, get_string('required'), 'required');
 
             // Add the 'isdelete' field.
             $mform->addElement(
@@ -406,9 +408,7 @@ class opencast extends libbase {
                     $ocworkflow
                 );
 
-                // Waiting for the itteration to be managed.
-                // return step_response::waiting();
-                // TODO: Ask if that is what that should actualy happen!
+                // In case there is no proper workflow, we skip the Opencast intance processing!
                 continue;
             }
 
