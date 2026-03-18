@@ -26,6 +26,7 @@
 namespace tool_lifecycle\step;
 
 use core_cache\cache;
+use core\output\html_writer;
 use tool_lifecycle\local\manager\settings_manager;
 use tool_lifecycle\local\response\step_response;
 use tool_lifecycle\settings_type;
@@ -159,7 +160,7 @@ class opencast extends libbase {
         // Iterate over the instances.
         foreach ($ocinstances as $instance) {
             // Add a heading for the instance.
-            $headingstring = \html_writer::tag('h3', get_string(
+            $headingstring = html_writer::tag('h3', get_string(
                 'mform_ocinstanceheading',
                 'lifecyclestep_opencast',
                 ['name' => $instance->name]
@@ -217,7 +218,7 @@ class opencast extends libbase {
         }
 
         // Add a heading for the general settings.
-        $headingstring = \html_writer::tag('h3', get_string('mform_generalsettingsheading', 'lifecyclestep_opencast'));
+        $headingstring = html_writer::tag('h3', get_string('mform_generalsettingsheading', 'lifecyclestep_opencast'));
         $mform->addElement('html', $headingstring);
 
         // Rate Limiter for the opencast instance.
@@ -324,7 +325,7 @@ class opencast extends libbase {
      */
     private function process_ocvideos($processid, $instanceid, $course) {
         // Get caches.
-        $ocworkflowscache =  cache::make('lifecyclestep_opencast', 'ocworkflows');
+        $ocworkflowscache = cache::make('lifecyclestep_opencast', 'ocworkflows');
 
         // Get the step instance setting.
         $ocstepsettings = settings_manager::get_settings($instanceid, settings_type::STEP);

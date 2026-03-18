@@ -18,7 +18,7 @@
  * Update script for lifecycles subplugin opencast
  *
  * @package     lifecyclestep_opencast
- * @copyright   2023 Farbod Zamani Boroujeni, elan e.V.
+ * @copyright   2026 Farbod Zamani Boroujeni, elan e.V.
  * @author      Farbod Zamani Boroujeni <zamani@elan-ev.de>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
