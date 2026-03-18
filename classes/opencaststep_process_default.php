@@ -25,6 +25,7 @@
 
 namespace lifecyclestep_opencast;
 
+use core_cache\cache;
 use tool_lifecycle\local\response\step_response;
 use lifecyclestep_opencast\notification_helper;
 use lifecyclestep_opencast\log_helper;
@@ -58,10 +59,10 @@ class opencaststep_process_default {
         $ocdryrunenabled
     ) {
         // Prepare series videos cache.
-        $seriesvideoscache = \cache::make('lifecyclestep_opencast', 'seriesvideos');
+        $seriesvideoscache = cache::make('lifecyclestep_opencast', 'seriesvideos');
 
         // Prepare processed videos caching for the step instance.
-        $processedvideoscache = \cache::make('lifecyclestep_opencast', 'processedvideos');
+        $processedvideoscache = cache::make('lifecyclestep_opencast', 'processedvideos');
         $stepprocessedvideos = [];
         if ($processedvideoscache->has($instanceid)) {
             $processedvideoscacheresult = $processedvideoscache->get($instanceid);

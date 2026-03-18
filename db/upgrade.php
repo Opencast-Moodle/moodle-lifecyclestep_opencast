@@ -45,7 +45,7 @@ function xmldb_lifecyclestep_opencast_upgrade($oldversion) {
 
         $tags = get_config('lifecyclestep_opencast', 'workflowtags');
         if (empty($tags)) {
-            $tags = 'delete,archive'; // Default tags.
+            $tags = \tool_lifecycle\step\opencast::DEFAULT_OPENCAST_WORKFLOW_TAGS;
         }
         $ratelimiter = get_config('lifecyclestep_opencast', 'ratelimiter');
         if (empty($ratelimiter)) {

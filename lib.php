@@ -25,6 +25,7 @@
 
 namespace tool_lifecycle\step;
 
+use core_cache\cache;
 use tool_lifecycle\local\manager\settings_manager;
 use tool_lifecycle\local\response\step_response;
 use tool_lifecycle\settings_type;
@@ -50,6 +51,9 @@ define('LIFECYCLESTEP_OPENCAST_SELECT_NO', 'no');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class opencast extends libbase {
+    /** @var string Default Opencast workflow tags. */
+    const DEFAULT_OPENCAST_WORKFLOW_TAGS = 'delete,archive';
+
     /**
      * Returns the string of the specific icon for this step.
      * @return string icon string
@@ -170,7 +174,7 @@ class opencast extends libbase {
                 get_string('mform_workflowtags', 'lifecyclestep_opencast')
             );
             $mform->setType($workflowtagsid, PARAM_RAW);
-            $mform->setDefault($workflowtagsid, 'delete');
+            $mform->setDefault($workflowtagsid, self::DEFAULT_OPENCAST_WORKFLOW_TAGS);
             $mform->addHelpButton(
                 $workflowtagsid,
                 'mform_workflowtags',
@@ -277,7 +281,7 @@ class opencast extends libbase {
         foreach ($ocinstances as $instance) {
             $workflowtagsid = "ocworkflowtags{$instance->id}";
             // Get workflow choices of this OC instance.
-            $tags = 'delete,archive'; // Default to delete and archive.
+            $tags = self::DEFAULT_OPENCAST_WORKFLOW_TAGS;
             if (!empty($settings[$workflowtagsid])) {
                 $tags = $settings[$workflowtagsid];
             }
@@ -320,7 +324,7 @@ class opencast extends libbase {
      */
     private function process_ocvideos($processid, $instanceid, $course) {
         // Get caches.
-        $ocworkflowscache = \cache::make('lifecyclestep_opencast', 'ocworkflows');
+        $ocworkflowscache =  cache::make('lifecyclestep_opencast', 'ocworkflows');
 
         // Get the step instance setting.
         $ocstepsettings = settings_manager::get_settings($instanceid, settings_type::STEP);
@@ -551,7 +555,7 @@ class opencast extends libbase {
         );
 
         // Try to clear the cache of the processed videos for this course.
-        $processedvideoscache = \cache::make('lifecyclestep_opencast', 'processedvideos');
+        $processedvideoscache = cache::make('lifecyclestep_opencast', 'processedvideos');
         if ($processedvideoscache->has($instanceid)) {
             $processedvideoscacheresult = $processedvideoscache->get($instanceid);
             $stepprocessedvideos = $processedvideoscacheresult->stepprocessedvideos;
