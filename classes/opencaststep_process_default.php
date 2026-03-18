@@ -43,6 +43,7 @@ class opencaststep_process_default {
      * @param bool $octraceenabled
      * @param bool $ocnotifyadminenabled
      * @param bool $ratelimiterenabled
+     * @param bool $ocdryrunenabled
      *
      * @return string the process response, empty if no waiting is required.
      */
@@ -53,7 +54,8 @@ class opencaststep_process_default {
         $instanceid,
         $octraceenabled,
         $ocnotifyadminenabled,
-        $ratelimiterenabled
+        $ratelimiterenabled,
+        $ocdryrunenabled
     ) {
         // Prepare series videos cache.
         $seriesvideoscache = \cache::make('lifecyclestep_opencast', 'seriesvideos');
@@ -72,6 +74,10 @@ class opencaststep_process_default {
         // Get the course's series.
         $courseseries = $apibridge->get_course_series($course->id);
 
+        // We force print traces in dry run mode.
+        if ($ocdryrunenabled) {
+            $octraceenabled = true;
+        }
         $logtrace = new log_helper($octraceenabled);
 
         $notificationhelper = new notification_helper($ocnotifyadminenabled);
@@ -152,8 +158,12 @@ class opencaststep_process_default {
                     continue;
                 }
 
-                // Start the configured workflow for this video.
-                $workflowresult = $apibridge->start_workflow($video->identifier, $ocworkflow);
+                $workflowresult = true;
+                // Only start work when dry run mode if off!
+                if ($ocdryrunenabled === false) {
+                    // Start the configured workflow for this video.
+                    $workflowresult = $apibridge->start_workflow($video->identifier, $ocworkflow);
+                }
 
                 // If the workflow wasn't started successfully, skip this video.
                 if ($workflowresult == false) {

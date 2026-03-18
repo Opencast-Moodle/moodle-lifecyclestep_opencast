@@ -51,6 +51,14 @@ define('LIFECYCLESTEP_OPENCAST_SELECT_NO', 'no');
  */
 class opencast extends libbase {
     /**
+     * Returns the string of the specific icon for this step.
+     * @return string icon string
+     */
+    public function get_icon() {
+        return 'i/messagecontentvideo';
+    }
+
+    /**
      * Processes the course and returns a response.
      * The response tells either
      *  - that the subplugin is finished processing.
@@ -112,6 +120,9 @@ class opencast extends libbase {
             $settings[] = new instance_setting('ocisdelete' . $instance->id, PARAM_ALPHA);
             $settings[] = new instance_setting('ocremoveseriesmapping' . $instance->id, PARAM_ALPHA);
         }
+
+        // Instance setting for the 'ocdryrun' field.
+        $settings[] = new instance_setting('ocdryrun', PARAM_ALPHA);
 
         // Instance setting for the 'octrace' field.
         $settings[] = new instance_setting('octrace', PARAM_ALPHA);
@@ -205,6 +216,21 @@ class opencast extends libbase {
         $headingstring = \html_writer::tag('h3', get_string('mform_generalsettingsheading', 'lifecyclestep_opencast'));
         $mform->addElement('html', $headingstring);
 
+        // Rate Limiter for the opencast instance.
+        $dryrunid = "ocdryrun";
+        $mform->addElement(
+            'select',
+            $dryrunid,
+            get_string('mform_dryrun', 'lifecyclestep_opencast'),
+            $yesnooption
+        );
+        $mform->setDefault($dryrunid, LIFECYCLESTEP_OPENCAST_SELECT_NO);
+        $mform->addHelpButton(
+            $dryrunid,
+            'mform_dryrun',
+            'lifecyclestep_opencast'
+        );
+
         // Add the 'octrace' field.
         $mform->addElement(
             'select',
@@ -273,6 +299,12 @@ class opencast extends libbase {
                 $workflowselectelement->addOption($opttext, $optvalue);
             }
         }
+
+        // Handeling information regarding dry run.
+        $ocdryrun = $settings['ocdryrun'] ?? null;
+        if ($ocdryrun === LIFECYCLESTEP_OPENCAST_SELECT_YES) {
+            \core\notification::info(get_string('mform_dryrun_info', 'lifecyclestep_opencast'));
+        }
     }
 
     /**
@@ -300,6 +332,16 @@ class opencast extends libbase {
             $octraceenabled = false;
         }
 
+        // Preparing dry run config.
+        $ocdryrun = $ocstepsettings['ocdryrun'];
+        if ($ocdryrun == LIFECYCLESTEP_OPENCAST_SELECT_YES) {
+            $ocdryrunenabled = true;
+            // Force log trace in dry run.
+            $octraceenabled = true;
+        } else {
+            $ocdryrunenabled = false;
+        }
+
         $logtrace = new log_helper($octraceenabled);
 
         // Get the step instance setting for ocnotifyadmin.
@@ -318,6 +360,15 @@ class opencast extends libbase {
             $ratelimiterenabled = true;
         } else {
             $ratelimiterenabled = false;
+        }
+
+        // Trace dry run.
+        if ($ocdryrunenabled) {
+            $logtrace->print_mtrace(
+            get_string('mtrace_start_process_with_dryrun', 'lifecyclestep_opencast'),
+            '***',
+            1
+            );
         }
 
         // Trace.
@@ -431,7 +482,8 @@ class opencast extends libbase {
                     $ocremoveseriesmappingenabled,
                     $octraceenabled,
                     $ocnotifyadminenabled,
-                    $ratelimiterenabled
+                    $ratelimiterenabled,
+                    $ocdryrunenabled
                 );
 
                 // Trace.
@@ -455,7 +507,8 @@ class opencast extends libbase {
                     $instanceid,
                     $octraceenabled,
                     $ocnotifyadminenabled,
-                    $ratelimiterenabled
+                    $ratelimiterenabled,
+                    $ocdryrunenabled
                 );
                 // Trace.
                 $logtrace->print_mtrace(

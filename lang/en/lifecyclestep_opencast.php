@@ -80,3 +80,7 @@ $string['mform_workflowtags'] = 'Opencast workflow tags';
 $string['mform_workflowtags_help'] = 'A comma separated list of workflow tags, to get the related workflows from Opencast, which then could be selected for each step to be run against existing events.<br> Because of limitations in handling step settings, changes to this element will only take effect after you save.<br> NOTE: if empty \'delete\' tag will be used.';
 $string['mform_ratelimiter'] = 'Opencast rate limiter';
 $string['mform_ratelimiter_help'] = 'This option makes the step to only be performed once for an opencast event. Disabling this option processes all events of a series in one go.';
+$string['mform_dryrun'] = 'Enable Dry Run';
+$string['mform_dryrun_help'] = 'By enabling this option, the step will process the Opencast series and events and only output what would be done, without actually running any workflow on the events.';
+$string['mform_dryrun_info'] = 'Dry run mode is enabled for this Opencast step. Changes are not applied. This execution only simulates the process and shows what would happen in a real run.';
+$string['mtrace_start_process_with_dryrun'] = '[INFO] Execution is in dry run mode. All operations are simulated for preview purposes only.';

@@ -49,6 +49,7 @@ class opencaststep_process_delete {
      * @param bool $octraceenabled
      * @param bool $ocnotifyadminenabled
      * @param bool $ratelimiterenabled
+     * @param bool $ocdryrunenabled
      *
      * @return string the process response, empty if no waiting is required.
      */
@@ -60,7 +61,8 @@ class opencaststep_process_delete {
         $ocremoveseriesmappingenabled,
         $octraceenabled,
         $ocnotifyadminenabled,
-        $ratelimiterenabled
+        $ratelimiterenabled,
+        $ocdryrunenabled
     ) {
         // Prepare series videos cache.
         $seriesvideoscache = \cache::make('lifecyclestep_opencast', 'seriesvideos');
@@ -79,6 +81,10 @@ class opencaststep_process_delete {
         // Get the course's series.
         $courseseries = $apibridge->get_course_series($course->id);
 
+        // We force print traces in dry run mode.
+        if ($ocdryrunenabled) {
+            $octraceenabled = true;
+        }
         $logtrace = new log_helper($octraceenabled);
 
         $notificationhelper = new notification_helper($ocnotifyadminenabled);
@@ -138,8 +144,12 @@ class opencaststep_process_delete {
 
             // This happens when a series is shared among multiple courses via ACL change.
             if (count($seriesmappings) > 1) {
-                // In this case, we only take out the acls from the series and its videos.
-                $seriesunlinked = $apibridge->unlink_series_from_course($course->id, $series->series);
+                // Only unlink series when dry run mode if off!
+                $seriesunlinked = true;
+                if ($ocdryrunenabled === false) {
+                    // In this case, we only take out the acls from the series and its videos.
+                    $seriesunlinked = $apibridge->unlink_series_from_course($course->id, $series->series);
+                }
                 if (!$seriesunlinked) {
                     // Trace.
                     $logtrace->print_mtrace(
@@ -207,8 +217,12 @@ class opencaststep_process_delete {
                         continue;
                     }
 
-                    // Start the configured workflow for this video.
-                    $workflowresult = self::perform_delete_event($ocinstanceid, $video->identifier, $ocworkflow);
+                    // Only delete event when dry run mode if off!
+                    $workflowresult = true;
+                    if ($ocdryrunenabled === false) {
+                        // Start the configured workflow for this video.
+                        $workflowresult = self::perform_delete_event($ocinstanceid, $video->identifier, $ocworkflow);
+                    }
 
                     // If the workflow wasn't started successfully, skip this video.
                     if ($workflowresult == false) {
@@ -284,8 +298,13 @@ class opencaststep_process_delete {
                 );
 
                 if ($mapping) {
+                    // Only delete series mapping when dry run mode if off!
+                    $mappingdeleted = true;
+                    if ($ocdryrunenabled === false) {
+                        $mappingdeleted = $mapping->delete();
+                    }
                     // First remove the series mapping.
-                    if (!$mapping->delete()) {
+                    if (!$mappingdeleted) {
                         // Trace.
                         $logtrace->print_mtrace(
                             get_string('mtrace_error_remove_series_mapping', 'lifecyclestep_opencast'),
