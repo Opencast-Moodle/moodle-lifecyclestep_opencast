@@ -27,6 +27,8 @@ use tool_lifecycle\local\manager\settings_manager;
 use tool_lifecycle\local\manager\step_manager;
 use tool_opencast\local\settings_api;
 
+defined('MOODLE_INTERNAL') || die();
+
 // Require the necessary constants.
 require_once(__DIR__ . '/../lib.php');
 
@@ -42,7 +44,6 @@ require_once(__DIR__ . '/../lib.php');
 function xmldb_lifecyclestep_opencast_upgrade($oldversion) {
 
     if ($oldversion < 2026031700) {
-
         $tags = get_config('lifecyclestep_opencast', 'workflowtags');
         if (empty($tags)) {
             $tags = \tool_lifecycle\step\opencast::DEFAULT_OPENCAST_WORKFLOW_TAGS;
