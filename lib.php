@@ -150,7 +150,7 @@ class opencast extends libbase {
         // Prepare options array for select settings.
         $yesnooption = [
             LIFECYCLESTEP_OPENCAST_SELECT_YES => get_string('yes'),
-            LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no')
+            LIFECYCLESTEP_OPENCAST_SELECT_NO => get_string('no'),
         ];
 
         // Get the configured OC instances.
@@ -273,8 +273,7 @@ class opencast extends libbase {
      * @param array $settings
      * @return void
      */
-    public function extend_add_instance_form_definition_after_data($mform, $settings): void
-    {
+    public function extend_add_instance_form_definition_after_data($mform, $settings): void {
         $ocinstances = settings_api::get_ocinstances();
 
         // Iterate over the instances.
@@ -369,9 +368,9 @@ class opencast extends libbase {
         // Trace dry run.
         if ($ocdryrunenabled) {
             $logtrace->print_mtrace(
-            get_string('mtrace_start_process_with_dryrun', 'lifecyclestep_opencast'),
-            '***',
-            1
+                get_string('mtrace_start_process_with_dryrun', 'lifecyclestep_opencast'),
+                '***',
+                1
             );
         }
 
