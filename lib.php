@@ -233,24 +233,24 @@ class opencast extends libbase {
         // Iterate over the instances.
         foreach ($ocinstances as $instance) {
             // Instance setting for the 'ocworkflowtags' field.
-            $settings[] = new instance_setting('ocworkflowtags' . $instance->id, PARAM_RAW);
+            $settings[] = new instance_setting('ocworkflowtags' . $instance->id, PARAM_TAGLIST, false);
             // Instance setting for the 'ocworkflow' field.
-            $settings[] = new instance_setting('ocworkflow_instance' . $instance->id, PARAM_ALPHANUMEXT);
-            $settings[] = new instance_setting('ocisdelete' . $instance->id, PARAM_ALPHA);
-            $settings[] = new instance_setting('ocremoveseriesmapping' . $instance->id, PARAM_ALPHA);
+            $settings[] = new instance_setting('ocworkflow_instance' . $instance->id, PARAM_ALPHANUMEXT, false);
+            $settings[] = new instance_setting('ocisdelete' . $instance->id, PARAM_ALPHA, false);
+            $settings[] = new instance_setting('ocremoveseriesmapping' . $instance->id, PARAM_ALPHA, false);
         }
 
         // Instance setting for the 'ocdryrun' field.
-        $settings[] = new instance_setting('ocdryrun', PARAM_ALPHA);
+        $settings[] = new instance_setting('ocdryrun', PARAM_ALPHA, true);
 
         // Instance setting for the 'octrace' field.
-        $settings[] = new instance_setting('octrace', PARAM_ALPHA);
+        $settings[] = new instance_setting('octrace', PARAM_ALPHA, true);
 
         // Instance setting for the 'ocnotifyadmin' field.
-        $settings[] = new instance_setting('ocnotifyadmin', PARAM_ALPHA);
+        $settings[] = new instance_setting('ocnotifyadmin', PARAM_ALPHA, true);
 
         // Instance setting for the 'ocratelimiter' field.
-        $settings[] = new instance_setting('ocratelimiter', PARAM_ALPHA);
+        $settings[] = new instance_setting('ocratelimiter', PARAM_ALPHA, true);
 
         // Return settings array.
         return $settings;

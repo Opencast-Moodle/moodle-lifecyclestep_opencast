@@ -275,7 +275,7 @@ class opencaststep_process_delete {
                         $processedvideoscacheobj->stepprocessedvideos = $stepprocessedvideos;
                         $processedvideoscache->set($instanceid, $processedvideoscacheobj);
 
-                        $report->add_info_line("Video (ID: $video->identifier}) has been processed by deletion.");
+                        $report->add_info_line("Video (ID: {$video->identifier}) has been processed by deletion.");
                         // If the rate limiter is enabled.
                         if ($ratelimiterenabled == true) {
                             // Trace.
