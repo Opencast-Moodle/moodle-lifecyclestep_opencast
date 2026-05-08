@@ -9,7 +9,7 @@ This plugin was originally developed in 2022 by Alexander Bias from [ssystems.de
 * Moodle 4.5+
 * Opencast 15+
 * Moodle Opencast API plugin (`tool_opencast`) v4.5-rx
-* Moodle Opencast Videos plugin (`block_opencast`) v4.5-r7x
+* Moodle Opencast Videos plugin (`block_opencast`) v4.5-rx
 * Moodle Course Life Cycle (`tool_lifecycle`) MOODLE_405_STABLE, MOODLE_500_STABLE or MOODLE_501_STABLE
 
 ## Installation
